@@ -1,4 +1,4 @@
-package xyz.wcd.base;
+package io.github.mudongjing.base;
 
 public class LField {
     private long modifiers;

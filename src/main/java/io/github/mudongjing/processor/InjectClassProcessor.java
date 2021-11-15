@@ -1,5 +1,8 @@
-package xyz.wcd.processor;
+package io.github.mudongjing.processor;
 
+import io.github.mudongjing.annotation.InjectClass;
+import io.github.mudongjing.base.BaseClassProcessor;
+import io.github.mudongjing.base.LObject;
 import com.google.auto.service.AutoService;
 import com.sun.source.tree.Tree;
 import com.sun.tools.javac.code.Flags;
@@ -9,11 +12,8 @@ import com.sun.tools.javac.tree.TreeTranslator;
 import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.ListBuffer;
 import com.sun.tools.javac.util.Name;
-import xyz.wcd.annotation.InjectClass;
-import xyz.wcd.base.BaseClassProcessor;
-import xyz.wcd.base.LClass;
-import xyz.wcd.base.LField;
-import xyz.wcd.base.LObject;
+import io.github.mudongjing.base.LClass;
+import io.github.mudongjing.base.LField;
 
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.SupportedAnnotationTypes;
@@ -26,9 +26,11 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 @AutoService(Processor.class)
-@SupportedAnnotationTypes("xyz.wcd.annotation.InjectClass")
+@SupportedAnnotationTypes("io.github.mudongjing.annotation.InjectClass")
 @SupportedSourceVersion(SourceVersion.RELEASE_7)
 public class InjectClassProcessor extends BaseClassProcessor {
     @Override
@@ -48,6 +50,7 @@ public class InjectClassProcessor extends BaseClassProcessor {
         String path=test.toUri().getPath();
         File[] files = new File(test.toUri().getPath().substring(1,path.indexOf("target"))+ "src/main/java/"+proInject.path().replace(".","/")).listFiles();
         java.util.List<LField> fieldList=new ArrayList<>();
+        Set<String> fileNamesSet=new HashSet();
         for (File file1:files){
             String s=file1.getName();
             String var=s.substring(0,s.indexOf("."));
@@ -60,6 +63,7 @@ public class InjectClassProcessor extends BaseClassProcessor {
             messager.printMessage(Diagnostic.Kind.NOTE,"varLow "+varLow);
             LField lField = LField.newInstance().modifiers(Flags.PRIVATE).typeFromString(classS).name(varLow).value(value);
             fieldList.add(lField);
+            fileNamesSet.add(lField.name());
         }
         JCTree tree = trees.getTree(lClass.getElement());
         lClass.insertFieldFromStringList(fieldList);
@@ -75,14 +79,17 @@ public class InjectClassProcessor extends BaseClassProcessor {
                     }
                 }
                 jcVariableDeclList.forEach(jcVariableDecl -> {
-                    jcClassDecl.defs = jcClassDecl.defs.prepend(makeSetterMethod(jcVariableDecl));
-                    jcClassDecl.defs = jcClassDecl.defs.prepend(makeGetterMethod(jcVariableDecl));
+                    if (fileNamesSet.contains(jcVariableDecl.getName().toString())){
+                        jcClassDecl.defs = jcClassDecl.defs.prepend(makeSetterMethod(jcVariableDecl));
+                        jcClassDecl.defs = jcClassDecl.defs.prepend(makeGetterMethod(jcVariableDecl));
+                    }
                 });
                 super.visitClassDef(jcClassDecl);
             }
         });
     }
     private JCTree.JCMethodDecl makeSetterMethod(JCTree.JCVariableDecl jcVariableDecl){
+
         ListBuffer<JCTree.JCStatement> statements = new ListBuffer<>();
         JCTree.JCExpressionStatement aThis = makeAssignment(treeMaker.Select(treeMaker.Ident(names.fromString("this")), jcVariableDecl.getName()), treeMaker.Ident(jcVariableDecl.getName()));
         statements.append(aThis);
@@ -92,6 +99,7 @@ public class InjectClassProcessor extends BaseClassProcessor {
         JCTree.JCExpression methodType = treeMaker.Type(new Type.JCVoidType());
         return treeMaker.MethodDef(treeMaker.Modifiers(Flags.PUBLIC),getNewMethodName(jcVariableDecl.getName()),methodType, List.nil(),parameters,List.nil(),block,null);
     }
+
     private JCTree.JCExpressionStatement makeAssignment(JCTree.JCExpression lhs, JCTree.JCExpression rhs) {
         return treeMaker.Exec(treeMaker.Assign(lhs, rhs));
     }
@@ -108,6 +116,7 @@ public class InjectClassProcessor extends BaseClassProcessor {
         messager.printMessage(Diagnostic.Kind.NOTE,"返回type"+methodType.toString());
         return treeMaker.MethodDef(treeMaker.Modifiers(Flags.PUBLIC),getGetMethodName(jcVariableDecl.getName()),methodType, List.nil(),List.nil(),List.nil(),block,null);
     }
+
     private Name getGetMethodName(Name name){
         String s = name.toString();
         return names.fromString("get"+s.substring(0,1).toUpperCase()+s.substring(1,name.length()));

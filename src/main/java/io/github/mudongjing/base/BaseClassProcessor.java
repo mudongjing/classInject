@@ -1,4 +1,4 @@
-package xyz.wcd.base;
+package io.github.mudongjing.base;
 
 import com.sun.tools.javac.code.Symbol;
 import javax.annotation.processing.RoundEnvironment;

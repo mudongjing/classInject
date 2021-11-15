@@ -1,4 +1,4 @@
-package xyz.wcd.base;
+package io.github.mudongjing.base;
 
 import com.sun.source.tree.Tree;
 import com.sun.tools.javac.code.Flags;
