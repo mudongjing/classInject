@@ -45,3 +45,14 @@
 > ```
 
 本项目主要参考并使用了https://github.com/houbb/lombok-ex项目中封装的一些类和方法。
+
+本人主要使用maven项目，其它读者如果需要用的话，可以在自己的本地maven仓库下，建立目录`io\github\mudongjing\classInject\1.0`，下载 `classInject-1.0.zip`文件到该目录下解压。
+
+```
+<dependency>
+    <groupId>xyz.wcd</groupId>
+    <artifactId>classInject</artifactId>
+    <version>1.0</version>
+</dependency>
+```
+
