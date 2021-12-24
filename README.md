@@ -50,9 +50,10 @@
 
 ```
 <dependency>
-    <groupId>xyz.wcd</groupId>
+    <groupId>io.github.mudongjing</groupId>
     <artifactId>classInject</artifactId>
     <version>1.0</version>
 </dependency>
 ```
 
+在使用该注解时，不能在当前类中添加自定义的构造函数，定义变量和其它方法是可以的。
